@@ -8,24 +8,33 @@ namespace api.Models
 {
     public class Process
     {
-        public int Id { get; set; }
+        public int id { get; set; }
 
         [Column(TypeName = "varchar(100)")]
-        public string Name { get; set; } = string.Empty;
+        public string name { get; set; } = string.Empty;
 
         [Column(TypeName = "varchar(100)")]
-        public string Tools { get; set; } = string.Empty;
+        public string tools { get; set; } = string.Empty;
 
         [Column(TypeName = "varchar(200)")]
-        public string Responsibles { get; set; } = string.Empty;
+        public string responsibles { get; set; } = string.Empty;
 
         [Column(TypeName = "varchar(500)")]
-        public string Documentation { get; set; } = string.Empty;
+        public string documentation { get; set; } = string.Empty;
 
         public string prioprity { get; set; } = string.Empty;
 
         public bool finished { get; set; } = false;
 
+        public DateTime createdOn { get; set; } = DateTime.Now;
+
+
+        // relacionamento com a tebela de setores
+        public int? sectorId { get; set; }
+        public Sector? sector { get; set; }
+
+
+        // auto relacionamento
         public int? parentProcessId { get; set; } // Null se for um processo principal
         
         [ForeignKey("parentProcessId")]
