@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using api.Data;
+using api.Models.Dtos.Department;
+using api.Models.Mappers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers
@@ -27,6 +29,25 @@ namespace api.Controllers
             .ToList();
 
             return Ok(departments);
+        }
+
+        [HttpGet("{id}")]
+        public IActionResult GetById([FromRoute] int id) {
+            var department = _context.Departments.Find(id);
+
+            if(department == null )
+                return NotFound();
+            
+            return Ok(department);
+        }
+
+        [HttpPost]
+        public IActionResult Create([FromBody] DepartmentDto departmentDto) {
+            var departmentModel = departmentDto.ToDepartmentFromCreateDto();
+            _context.Departments.Add(departmentModel);
+            _context.SaveChanges(); // commit
+
+            return CreatedAtAction(nameof(GetById), new {id = departmentModel.id}, departmentModel.ToDepartmentDto());
         }
     }
 }
