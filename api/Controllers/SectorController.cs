@@ -6,6 +6,7 @@ using api.Data;
 using api.Models.Dtos.Department;
 using api.Models.Dtos.Sector;
 using api.Models.Mappers;
+using api.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers
@@ -14,59 +15,47 @@ namespace api.Controllers
     [ApiController]
     public class SectorController : ControllerBase
     {
-        private readonly ApplicationDBContext _context;
+        private readonly SectorService _service;
 
-        public SectorController(ApplicationDBContext context)
+        public SectorController(SectorService service)
         {
-            _context = context;
+            _service = service;
         }
 
         [HttpGet]
         [Route("/get-all-sectors")]
         public IActionResult GetAll() {
-            var sectors = _context.Sectors.Select(x => new {
-                x.id,
-                x.name,
-                x.departmentId
-            })
-            .ToList();
+            var sectors = _service.GetAllSectors();
 
             return Ok(sectors);
         }
 
         [HttpGet("{id}")]
         public IActionResult GetById([FromRoute] int id) {
-            var sector = _context.Sectors.Find(id);
+            var sector = _service.GetSectorById(id);
 
             if(sector == null )
                 return NotFound();
             
-            return Ok(sector);
+            return Ok(sector.ToSectorWithIdDto());
         }
 
         [HttpPost]
         public IActionResult Create([FromBody] SectorDto sectorDto) {
-            var sectorModel = sectorDto.ToSectorFromCreateDto();
-            _context.Sectors.Add(sectorModel);
-            _context.SaveChanges(); // commit
+            var createdSector = _service.CreateSector(sectorDto);
 
-            return CreatedAtAction(nameof(GetById), new {id = sectorModel.id}, sectorModel.ToSectorDto());
+            return CreatedAtAction(nameof(GetById), new {id = createdSector.id}, createdSector.ToSectorDto());
         }
 
         [HttpPut]
         [Route("{id}")]
         public IActionResult Update([FromRoute] int id, [FromBody] UpdateSectorDto updateDto) {
-            var sectorModel = _context.Sectors.FirstOrDefault(x => x.id == id);
+            var updatedSector = _service.UpdateSector(id, updateDto);
 
-            if(sectorModel == null)
+            if(updatedSector == null)
                 return NotFound();
             
-            sectorModel.name = updateDto.name;
-            sectorModel.departmentId = updateDto.departmentId;
-
-            _context.SaveChanges();
-
-            return Ok(sectorModel.ToSectorDto());
+            return Ok(updatedSector);
         }
     }
 }

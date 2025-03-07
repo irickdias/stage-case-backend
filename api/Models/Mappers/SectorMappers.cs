@@ -15,6 +15,14 @@ namespace api.Models.Mappers
             };
         }
 
+        public static SectorWithIdDto ToSectorWithIdDto(this Sector sectorModel) {
+            return new SectorWithIdDto {
+                id = sectorModel.id,
+                name = sectorModel.name,
+                departmentId = sectorModel.departmentId
+            };
+        }
+
         public static Sector ToSectorFromCreateDto(this SectorDto sectorDto) {
             return new Sector {
                 name = sectorDto.name,
