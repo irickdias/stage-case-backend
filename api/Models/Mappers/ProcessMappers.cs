@@ -22,6 +22,21 @@ namespace api.Models.Mappers
             };
         }
 
+        public static HierarchyProcessDto ToHierarchyProcessDto(this Process processModel) {
+            return new HierarchyProcessDto {
+                id = processModel.id,
+                name = processModel.name,
+                tools = processModel.tools,
+                responsibles = processModel.responsibles,
+                documentation = processModel.documentation,
+                priority = processModel.priority,
+                finished = processModel.finished,
+                createdOn = processModel.createdOn,
+                sectorId = processModel.sectorId,
+                parentProcessId = processModel.parentProcessId
+            };
+        }
+
         public static Process ToProcessFromCreateDto(this ProcessDto processDto) {
             return new Process {
                 name = processDto.name,
