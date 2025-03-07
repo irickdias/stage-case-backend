@@ -6,6 +6,7 @@ using api.Data;
 using api.Models.Dtos.Department;
 using api.Models.Mappers;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace api.Controllers
 {
@@ -20,11 +21,34 @@ namespace api.Controllers
             _context = context;
         }
 
-        [HttpGet("/get-all")]
-        public IActionResult GetAll() {
-            var departments = _context.Departments.Select(p => new {
-                p.id,
-                p.name
+        [HttpGet]
+        [Route("/get-all-departments")]
+        public IActionResult GetAll()
+        {
+            var departments = _context.Departments.Select(x => new
+            {
+                x.id,
+                x.name
+            })
+            .ToList();
+
+            return Ok(departments);
+        }
+
+        [HttpGet]
+        [Route("/get-all-departments-sectors")]
+        public IActionResult GetAllDepartmentsSectors()
+        {
+            var departments = _context.Departments
+            .Select(d => new
+            {
+                d.id,
+                d.name,
+                sectors = d.sectors.Select(s => new
+                {
+                    s.id,
+                    s.name
+                }).ToList()
             })
             .ToList();
 
@@ -32,22 +56,40 @@ namespace api.Controllers
         }
 
         [HttpGet("{id}")]
-        public IActionResult GetById([FromRoute] int id) {
+        public IActionResult GetById([FromRoute] int id)
+        {
             var department = _context.Departments.Find(id);
 
-            if(department == null )
+            if (department == null)
                 return NotFound();
-            
+
             return Ok(department);
         }
 
         [HttpPost]
-        public IActionResult Create([FromBody] DepartmentDto departmentDto) {
+        public IActionResult Create([FromBody] DepartmentDto departmentDto)
+        {
             var departmentModel = departmentDto.ToDepartmentFromCreateDto();
             _context.Departments.Add(departmentModel);
             _context.SaveChanges(); // commit
 
-            return CreatedAtAction(nameof(GetById), new {id = departmentModel.id}, departmentModel.ToDepartmentDto());
+            return CreatedAtAction(nameof(GetById), new { id = departmentModel.id }, departmentModel.ToDepartmentDto());
+        }
+
+        [HttpPut]
+        [Route("{id}")]
+        public IActionResult Update([FromRoute] int id, [FromBody] UpdateDepartmentDto updateDto)
+        {
+            var departmentModel = _context.Departments.FirstOrDefault(x => x.id == id);
+
+            if (departmentModel == null)
+                return NotFound();
+
+            departmentModel.name = updateDto.name;
+
+            _context.SaveChanges();
+
+            return Ok(departmentModel.ToDepartmentDto());
         }
     }
 }
