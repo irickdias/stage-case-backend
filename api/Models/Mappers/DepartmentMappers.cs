@@ -15,6 +15,27 @@ namespace api.Models.Mappers
             };
         }
 
+        public static DepartmentWithIdDto ToDepartmentWithIdDto(this Department departmentModel) {
+            return new DepartmentWithIdDto {
+                id = departmentModel.id,
+                name = departmentModel.name
+            };
+        }
+
+        // public static DepartmentAndSectorsDto ToDepartmentAndSectorsDto(this Department departmentModel) {
+        //     return new DepartmentAndSectorsDto {
+        //         id = departmentModel.id,
+        //         name = departmentModel.name,
+        //         sectors = departmentModel.sectors
+        //         .Select(s => new SectorWithoutDepartmentIdDto
+        //         {
+        //             id = s.id,
+        //             name = s.name
+        //         })
+        //         .ToList()
+        //     };
+        // }
+
         public static Department ToDepartmentFromCreateDto(this DepartmentDto departmentDto) {
             return new Department {
                 name = departmentDto.name

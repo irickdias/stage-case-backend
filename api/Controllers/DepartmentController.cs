@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using api.Data;
 using api.Models.Dtos.Department;
 using api.Models.Mappers;
+using api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,23 +15,18 @@ namespace api.Controllers
     [ApiController]
     public class DepartmentController : ControllerBase
     {
-        private readonly ApplicationDBContext _context;
+        private readonly DepartmentService _service;
 
-        public DepartmentController(ApplicationDBContext context)
+        public DepartmentController(DepartmentService service)
         {
-            _context = context;
+            _service = service;
         }
 
         [HttpGet]
         [Route("/get-all-departments")]
         public IActionResult GetAll()
         {
-            var departments = _context.Departments.Select(x => new
-            {
-                x.id,
-                x.name
-            })
-            .ToList();
+            var departments = _service.GetAllDepartments();
 
             return Ok(departments);
         }
@@ -39,57 +35,53 @@ namespace api.Controllers
         [Route("/get-all-departments-sectors")]
         public IActionResult GetAllDepartmentsSectors()
         {
-            var departments = _context.Departments
-            .Select(d => new
-            {
-                d.id,
-                d.name,
-                sectors = d.sectors.Select(s => new
-                {
-                    s.id,
-                    s.name
-                }).ToList()
-            })
-            .ToList();
+            // var departments = _service.Departments
+            // .Select(d => new
+            // {
+            //     d.id,
+            //     d.name,
+            //     sectors = d.sectors.Select(s => new
+            //     {
+            //         s.id,
+            //         s.name
+            //     }).ToList()
+            // })
+            // .ToList();
 
-            return Ok(departments);
+            var ds = _service.GetAllDepartmentsAndSectors();
+
+            return Ok(ds);
         }
 
         [HttpGet("{id}")]
         public IActionResult GetById([FromRoute] int id)
         {
-            var department = _context.Departments.Find(id);
+            var department = _service.GetDepartmentById(id);
 
             if (department == null)
                 return NotFound();
 
-            return Ok(department);
+            return Ok(department.ToDepartmentWithIdDto());
         }
 
         [HttpPost]
         public IActionResult Create([FromBody] DepartmentDto departmentDto)
         {
-            var departmentModel = departmentDto.ToDepartmentFromCreateDto();
-            _context.Departments.Add(departmentModel);
-            _context.SaveChanges(); // commit
+            var createdDepartment = _service.CreateDepartment(departmentDto);
 
-            return CreatedAtAction(nameof(GetById), new { id = departmentModel.id }, departmentModel.ToDepartmentDto());
+            return CreatedAtAction(nameof(GetById), new { id = createdDepartment.id }, createdDepartment.ToDepartmentDto());
         }
 
         [HttpPut]
         [Route("{id}")]
         public IActionResult Update([FromRoute] int id, [FromBody] UpdateDepartmentDto updateDto)
         {
-            var departmentModel = _context.Departments.FirstOrDefault(x => x.id == id);
+            var updatedDepartment = _service.UpdateDepartment(id, updateDto);
 
-            if (departmentModel == null)
+            if (updatedDepartment == null)
                 return NotFound();
 
-            departmentModel.name = updateDto.name;
-
-            _context.SaveChanges();
-
-            return Ok(departmentModel.ToDepartmentDto());
+            return Ok(updatedDepartment);
         }
     }
 }

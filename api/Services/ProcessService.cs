@@ -20,6 +20,7 @@ namespace api.Services
 
         public List<ProcessDto> GetAllProcesses() {
             var processes = _context.Processes.Select(p => p.ToProcessDto()).ToList();
+            
             return processes;
         }
 
@@ -58,7 +59,7 @@ namespace api.Services
         }
 
         public ProcessDto? UpdateProcess(int id, UpdateProcessDto updateDto) {
-            var processModel = _context.Processes.FirstOrDefault(x => x.id == id);
+            var processModel = _context.Processes.FirstOrDefault(p => p.id == id);
 
             if (processModel == null)
                 return null;
