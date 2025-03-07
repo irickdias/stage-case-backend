@@ -22,7 +22,7 @@ namespace api.Models
         [Column(TypeName = "varchar(500)")]
         public string documentation { get; set; } = string.Empty;
 
-        public string prioprity { get; set; } = string.Empty;
+        public string priority { get; set; } = string.Empty;
 
         public bool finished { get; set; } = false;
 
