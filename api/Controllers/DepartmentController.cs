@@ -6,7 +6,6 @@ using api.Data;
 using api.Interfaces;
 using api.Models.Dtos.Department;
 using api.Models.Mappers;
-using api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,7 +17,7 @@ namespace api.Controllers
     {
         private readonly IDepartmentRepository _repo;
 
-        public DepartmentController(DepartmentService service, IDepartmentRepository repo)
+        public DepartmentController(IDepartmentRepository repo)
         {
             _repo = repo;
         }
