@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using api.Data;
+using api.Interfaces;
 using api.Models.Dtos.Department;
 using api.Models.Dtos.Sector;
 using api.Models.Mappers;
@@ -15,44 +16,44 @@ namespace api.Controllers
     [ApiController]
     public class SectorController : ControllerBase
     {
-        private readonly SectorService _service;
+        private readonly ISectorRepository _repo;
 
-        public SectorController(SectorService service)
+        public SectorController(ISectorRepository repo)
         {
-            _service = service;
+            _repo = repo;
         }
 
         [HttpGet]
         [Route("/get-all-sectors")]
-        public IActionResult GetAll() {
-            var sectors = _service.GetAllSectors();
+        public async Task<IActionResult> GetAll() {
+            var sectors = await _repo.GetAll();
 
             return Ok(sectors);
         }
 
         [HttpGet("{id}")]
-        public IActionResult GetById([FromRoute] int id) {
-            var sector = _service.GetSectorById(id);
+        public async Task<IActionResult> GetById([FromRoute] int id) {
+            var sector = await _repo.GetById(id);
 
-            if(sector == null )
+            if (sector == null )
                 return NotFound();
             
             return Ok(sector.ToSectorWithIdDto());
         }
 
         [HttpPost]
-        public IActionResult Create([FromBody] SectorDto sectorDto) {
-            var createdSector = _service.CreateSector(sectorDto);
+        public async Task<IActionResult> Create([FromBody] SectorDto sectorDto) {
+            var createdSector = await _repo.Create(sectorDto);
 
             return CreatedAtAction(nameof(GetById), new {id = createdSector.id}, createdSector.ToSectorDto());
         }
 
         [HttpPut]
         [Route("{id}")]
-        public IActionResult Update([FromRoute] int id, [FromBody] UpdateSectorDto updateDto) {
-            var updatedSector = _service.UpdateSector(id, updateDto);
+        public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdateSectorDto updateDto) {
+            var updatedSector = await _repo.Update(id, updateDto);
 
-            if(updatedSector == null)
+            if (updatedSector == null)
                 return NotFound();
             
             return Ok(updatedSector);

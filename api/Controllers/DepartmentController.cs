@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using api.Data;
+using api.Interfaces;
 using api.Models.Dtos.Department;
 using api.Models.Mappers;
 using api.Services;
@@ -15,25 +16,25 @@ namespace api.Controllers
     [ApiController]
     public class DepartmentController : ControllerBase
     {
-        private readonly DepartmentService _service;
+        private readonly IDepartmentRepository _repo;
 
-        public DepartmentController(DepartmentService service)
+        public DepartmentController(DepartmentService service, IDepartmentRepository repo)
         {
-            _service = service;
+            _repo = repo;
         }
 
         [HttpGet]
         [Route("/get-all-departments")]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            var departments = _service.GetAllDepartments();
+            var departments = await _repo.GetAll();
 
             return Ok(departments);
         }
 
         [HttpGet]
         [Route("/get-all-departments-sectors")]
-        public IActionResult GetAllDepartmentsSectors()
+        public async Task<IActionResult> GetAllDepartmentsSectors()
         {
             // var departments = _service.Departments
             // .Select(d => new
@@ -48,15 +49,15 @@ namespace api.Controllers
             // })
             // .ToList();
 
-            var ds = _service.GetAllDepartmentsAndSectors();
+            var ds = await _repo.GetAllDepartmentsAndSectors();
 
             return Ok(ds);
         }
 
         [HttpGet("{id}")]
-        public IActionResult GetById([FromRoute] int id)
+        public async Task<IActionResult> GetById([FromRoute] int id)
         {
-            var department = _service.GetDepartmentById(id);
+            var department = await _repo.GetById(id);
 
             if (department == null)
                 return NotFound();
@@ -65,18 +66,18 @@ namespace api.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create([FromBody] DepartmentDto departmentDto)
+        public async Task<IActionResult> Create([FromBody] DepartmentDto departmentDto)
         {
-            var createdDepartment = _service.CreateDepartment(departmentDto);
+            var createdDepartment = await _repo.Create(departmentDto);
 
             return CreatedAtAction(nameof(GetById), new { id = createdDepartment.id }, createdDepartment.ToDepartmentDto());
         }
 
         [HttpPut]
         [Route("{id}")]
-        public IActionResult Update([FromRoute] int id, [FromBody] UpdateDepartmentDto updateDto)
+        public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdateDepartmentDto updateDto)
         {
-            var updatedDepartment = _service.UpdateDepartment(id, updateDto);
+            var updatedDepartment = await _repo.Update(id, updateDto);
 
             if (updatedDepartment == null)
                 return NotFound();
