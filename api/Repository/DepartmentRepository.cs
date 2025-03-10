@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Linq;
 using api.Data;
 using api.Interfaces;
 using api.Models;
@@ -35,22 +36,23 @@ namespace api.Repository
                 {
                     // Verifica se o departamento existe
                     var department = await _context.Departments.FirstOrDefaultAsync(d => d.id == id);
-
+                    
                     if (department == null)
                         return null;
 
-                    // Deleta os processos recursivamente usando SQL
-                    await DeleteAllProcessesFromDepartment(id);
+                    // Verifica se há processos associados ao departamento
+                    if (await HasProcessesInDepartment(id))
+                        return null; // Retorna null para indicar que não pode excluir
 
-                    // 3Deleta os setores do departamento usando SQL
+                    // Deleta os setores do departamento
                     await _context.Database.ExecuteSqlRawAsync(@"
-                        DELETE FROM Sectors WHERE departmentId = {0}", id);
+                    DELETE FROM Sectors WHERE departmentId = {0}", id);
 
-                    // 4️⃣ Deleta o departamento usando SQL
+                    // Deleta o departamento
                     await _context.Database.ExecuteSqlRawAsync(@"
-                        DELETE FROM Departments WHERE id = {0}", id);
+                    DELETE FROM Departments WHERE id = {0}", id);
 
-                    // salva
+                    // Salva e confirma a transação
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
 
@@ -64,24 +66,19 @@ namespace api.Repository
             }
         }
 
-        private async Task DeleteAllProcessesFromDepartment(int departmentId)
+        private async Task<bool> HasProcessesInDepartment(int departmentId)
         {
-            // Deleta os processos de setores associados ao departamento, de forma recursiva, porem direto do banco
-            var deleteProcessSql = @"
-            WITH ProcessHierarchy AS (
-                SELECT id, parentProcessId
-                FROM Processes
-                WHERE sectorId IN (SELECT id FROM Sectors WHERE departmentId = {0})
-                UNION ALL
-                SELECT p.id, p.parentProcessId
-                FROM Processes p
-                INNER JOIN ProcessHierarchy ph ON p.parentProcessId = ph.id
-            )
-            DELETE FROM Processes WHERE id IN (SELECT id FROM ProcessHierarchy)"; // Talvez seja necessario colocar DISTINCT, para eliminar duplicatas
+            // 1️⃣ Obtém os IDs dos setores do departamento
+            var sectorIds = await _context.Sectors
+                .Where(s => s.departmentId == departmentId)
+                .Select(s => s.id)
+                .ToListAsync();
 
-            await _context.Database.ExecuteSqlRawAsync(deleteProcessSql, departmentId);
+            if (!sectorIds.Any())
+                return false; // Não há setores, então não pode haver processos
+
+            return await _context.Processes.AnyAsync(p => p.sectorId.HasValue && sectorIds.Contains(p.sectorId.Value));
         }
-
 
 
         public async Task<List<DepartmentWithIdDto>> GetAll()

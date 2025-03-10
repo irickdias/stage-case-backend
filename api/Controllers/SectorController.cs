@@ -23,9 +23,9 @@ namespace api.Controllers
         }
 
         [HttpGet]
-        [Route("/get-all-sectors")]
-        public async Task<IActionResult> GetAll() {
-            var sectors = await _repo.GetAll();
+        [Route("/get-all-sectors/{id?}")]
+        public async Task<IActionResult> GetAll([FromRoute] int? id) {
+            var sectors = await _repo.GetAll(id);
 
             return Ok(sectors);
         }
@@ -65,7 +65,7 @@ namespace api.Controllers
             var sectorModel = await _repo.Delete(id);
 
             if (sectorModel == null)
-                return NotFound();
+                return BadRequest("Existem processos atrelados a este setor.");
 
             return NoContent();
         }

@@ -91,7 +91,7 @@ namespace api.Controllers
             var departmetModel = await _repo.Delete(id);
 
             if (departmetModel == null)
-                return NotFound();
+                return BadRequest("Existem processos atrelados a este departamento.");
 
             return NoContent();
         }

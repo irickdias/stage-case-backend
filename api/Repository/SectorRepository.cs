@@ -36,10 +36,15 @@ namespace api.Repository
                     if (sector == null)
                         return null;
 
-                    await DeleteAllProcessesFromSector(id);
+                    // Busca se há processos associados a este setor
+                    bool hasProcesses = await _context.Processes.AnyAsync(p => p.sectorId == id);
 
+                    if (hasProcesses)
+                        return null; // Retorna null indicando que não pode ser excluído
+
+                    // Deleta o setor
                     await _context.Database.ExecuteSqlRawAsync(@"
-                        DELETE FROM Sectors WHERE id = {0}", id);
+                    DELETE FROM Sectors WHERE id = {0}", id);
 
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
@@ -55,27 +60,12 @@ namespace api.Repository
             throw new NotImplementedException();
         }
 
-        private async Task DeleteAllProcessesFromSector(int sectorId)
+        public async Task<List<SectorWithIdDto>> GetAll(int? id)
         {
-            // Deleta os processos de setores associados ao departamento, de forma recursiva, porem direto do banco
-            var deleteProcessSql = @"
-            WITH ProcessHierarchy AS (
-                SELECT id, parentProcessId
-                FROM Processes
-                WHERE sectorId = {0}
-                UNION ALL
-                SELECT p.id, p.parentProcessId
-                FROM Processes p
-                INNER JOIN ProcessHierarchy ph ON p.parentProcessId = ph.id
-            )
-            DELETE FROM Processes WHERE id IN (SELECT id FROM ProcessHierarchy)"; // Talvez seja necessario colocar DISTINCT, para eliminar duplicatas
-
-            await _context.Database.ExecuteSqlRawAsync(deleteProcessSql, sectorId);
-        }
-
-        public async Task<List<SectorWithIdDto>> GetAll()
-        {
-            return await _context.Sectors.Select(s => s.ToSectorWithIdDto()).ToListAsync();
+            if (id != null)
+                return await _context.Sectors.Where(s => s.departmentId == id).Select(s => s.ToSectorWithIdDto()).ToListAsync();
+            else
+                return await _context.Sectors.Select(s => s.ToSectorWithIdDto()).ToListAsync();
         }
 
         public async Task<Sector?> GetById(int id)
