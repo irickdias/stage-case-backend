@@ -10,5 +10,6 @@ namespace api.Interfaces
         Task<Department?> GetById(int id);
         Task<Department> Create(DepartmentDto departmentDto);
         Task<DepartmentDto?> Update(int id, UpdateDepartmentDto updateDto);
+        Task<Department?> Delete(int id);
     }
 }

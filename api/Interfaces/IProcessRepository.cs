@@ -10,5 +10,6 @@ namespace api.Interfaces
         Task<List<HierarchyProcessDto>> GetProcessesHierarchy();
         Task<Process> Create(ProcessDto processDto);
         Task<ProcessDto?> Update(int id, UpdateProcessDto updateDto);
+        Task<Process?> Delete(int id);
     }
 }

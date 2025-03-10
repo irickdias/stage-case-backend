@@ -1,4 +1,5 @@
-﻿using api.Data;
+﻿using System.Diagnostics;
+using api.Data;
 using api.Interfaces;
 using api.Models;
 using api.Models.Dtos.Department;
@@ -25,6 +26,63 @@ namespace api.Repository
 
             return departmentModel;
         }
+
+        public async Task<Department?> Delete(int id)
+        {
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    // Verifica se o departamento existe
+                    var department = await _context.Departments.FirstOrDefaultAsync(d => d.id == id);
+
+                    if (department == null)
+                        return null;
+
+                    // Deleta os processos recursivamente usando SQL
+                    await DeleteProcessesRecursiveSqlAsync(id);
+
+                    // 3Deleta os setores do departamento usando SQL
+                    await _context.Database.ExecuteSqlRawAsync(@"
+                        DELETE FROM Sectors WHERE DepartmentId = {0}", id);
+
+                    // 4️⃣ Deleta o departamento usando SQL
+                    await _context.Database.ExecuteSqlRawAsync(@"
+                        DELETE FROM Departments WHERE Id = {0}", id);
+
+                    // salva
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    return department;
+                }
+                catch (Exception)
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+        }
+
+        private async Task DeleteProcessesRecursiveSqlAsync(int departmentId)
+        {
+            // Deleta os processos de setores associados ao departamento, de forma recursiva, porem direto do banco
+            var deleteProcessSql = @"
+            WITH ProcessHierarchy AS (
+                SELECT id, parentProcessId
+                FROM Processes
+                WHERE sectorId IN (SELECT id FROM Sectors WHERE departmentId = {0})
+                UNION ALL
+                SELECT p.id, p.parentProcessId
+                FROM Processes p
+                INNER JOIN ProcessHierarchy ph ON p.parentProcessId = ph.id
+            )
+            DELETE FROM Processes WHERE id IN (SELECT id FROM ProcessHierarchy)"; // Talvez seja necessario colocar DISTINCT, para eliminar duplicatas
+
+            await _context.Database.ExecuteSqlRawAsync(deleteProcessSql, departmentId);
+        }
+
+
 
         public async Task<List<DepartmentWithIdDto>> GetAll()
         {
@@ -66,5 +124,7 @@ namespace api.Repository
 
             return departmentModel.ToDepartmentDto();
         }
+
+     
     }
 }

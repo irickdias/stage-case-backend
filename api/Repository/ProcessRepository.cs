@@ -25,6 +25,51 @@ namespace api.Repository
             return processModel;
         }
 
+        public async Task<Process?> Delete(int id)
+        {
+            var processModel = await _context.Processes.FirstOrDefaultAsync(p => p.id == id);
+
+            if (processModel == null)
+                return null;
+
+            /*var sql = @"
+                WITH ProcessHierarchy AS (
+                    SELECT id FROM Processes WHERE id = {0}
+                    UNION ALL
+                    SELECT p.id FROM Processes p
+                    INNER JOIN ProcessHierarchy ph ON p.parentProcessId = ph.id
+                )
+                SELECT id FROM ProcessHierarchy;
+            ";
+
+            var processIds = await _context.Processes
+                .FromSqlRaw(sql, id)
+                .Select(p => p.id)
+                .ToListAsync();
+
+            await _context.Processes
+                .Where(p => processIds.Contains(p.id))
+                .ExecuteDeleteAsync();
+
+            await _context.SaveChangesAsync();*/
+
+            var sql = @"
+                WITH ProcessHierarchy AS (
+                    SELECT id FROM Processes WHERE id = {0}
+                    UNION ALL
+                    SELECT p.id FROM Processes p
+                    INNER JOIN ProcessHierarchy ph ON p.parentProcessId = ph.id
+                )
+                DELETE FROM Processes WHERE id IN (SELECT id FROM ProcessHierarchy);
+            ";
+
+            await _context.Database.ExecuteSqlRawAsync(sql, id);
+
+            await _context.SaveChangesAsync();
+
+            return processModel;
+        }
+
         public async Task<List<ProcessDto>> GetAll()
         {
             return await _context.Processes.Select(p => p.ToProcessDto()).ToListAsync();
@@ -76,6 +121,26 @@ namespace api.Repository
             await _context.SaveChangesAsync();
 
             return processModel.ToProcessDto();
+        }
+
+        private async Task<List<int>> GetAllSubProcessesAsync(int parentId)
+        {
+            // consulta por todos os subprocessos (traz apenas os ids) existentes com o id do pai
+            var subProcesses = await _context.Processes
+                .Where(p => p.parentProcessId == parentId)
+                .Select(p => p.id)
+                .ToListAsync();
+
+            var allSubProcessIds = new List<int>(subProcesses);
+
+            // para cada subprocesso encontrado, ele vai entrar de novo na função recursivamente, procurando a existencia de nós filhos
+            foreach (var subProcessId in subProcesses)
+            {
+                // quando retornado do heap, adiciona todos os ids encontrados na lista de is para excluir
+                allSubProcessIds.AddRange(await GetAllSubProcessesAsync(subProcessId));
+            }
+
+            return allSubProcessIds;
         }
     }
 }

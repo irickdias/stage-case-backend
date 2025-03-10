@@ -83,5 +83,17 @@ namespace api.Controllers
 
             return Ok(updatedDepartment);
         }
+
+        [HttpDelete]
+        [Route("{id}")]
+        public async Task<IActionResult> Delete([FromRoute] int id)
+        {
+            var departmetModel = await _repo.Delete(id);
+
+            if (departmetModel == null)
+                return NotFound();
+
+            return NoContent();
+        }
     }
 }

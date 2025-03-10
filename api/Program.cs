@@ -4,10 +4,21 @@ using api.Repository;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(MyAllowSpecificOrigins,
+                          policy =>
+                          {
+                              policy.WithOrigins("http://localhost:3000")
+                                                  .AllowAnyHeader()
+                                                  .AllowAnyMethod();
+                          });
+});
+
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 
@@ -30,6 +41,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors(MyAllowSpecificOrigins);
 
 app.MapControllers();
 
