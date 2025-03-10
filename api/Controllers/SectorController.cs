@@ -57,5 +57,17 @@ namespace api.Controllers
             
             return Ok(updatedSector);
         }
+
+        [HttpDelete]
+        [Route("{id}")]
+        public async Task<IActionResult> Delete([FromRoute] int id)
+        {
+            var sectorModel = await _repo.Delete(id);
+
+            if (sectorModel == null)
+                return NotFound();
+
+            return NoContent();
+        }
     }
 }

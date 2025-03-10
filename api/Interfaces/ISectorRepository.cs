@@ -9,5 +9,6 @@ namespace api.Interfaces
         Task<Sector?> GetById(int id);
         Task<Sector> Create(SectorDto sectorDto);
         Task<SectorDto?> Update(int id, UpdateSectorDto updateDto);
+        Task<Sector?> Delete(int id);
     }
 }

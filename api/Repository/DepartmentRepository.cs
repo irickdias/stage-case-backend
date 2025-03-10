@@ -40,15 +40,15 @@ namespace api.Repository
                         return null;
 
                     // Deleta os processos recursivamente usando SQL
-                    await DeleteProcessesRecursiveSqlAsync(id);
+                    await DeleteAllProcessesFromDepartment(id);
 
                     // 3Deleta os setores do departamento usando SQL
                     await _context.Database.ExecuteSqlRawAsync(@"
-                        DELETE FROM Sectors WHERE DepartmentId = {0}", id);
+                        DELETE FROM Sectors WHERE departmentId = {0}", id);
 
                     // 4️⃣ Deleta o departamento usando SQL
                     await _context.Database.ExecuteSqlRawAsync(@"
-                        DELETE FROM Departments WHERE Id = {0}", id);
+                        DELETE FROM Departments WHERE id = {0}", id);
 
                     // salva
                     await _context.SaveChangesAsync();
@@ -64,7 +64,7 @@ namespace api.Repository
             }
         }
 
-        private async Task DeleteProcessesRecursiveSqlAsync(int departmentId)
+        private async Task DeleteAllProcessesFromDepartment(int departmentId)
         {
             // Deleta os processos de setores associados ao departamento, de forma recursiva, porem direto do banco
             var deleteProcessSql = @"
