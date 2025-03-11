@@ -1,4 +1,5 @@
-﻿using api.Models;
+﻿using api.Helpers;
+using api.Models;
 using api.Models.Dtos.Process;
 
 namespace api.Interfaces
@@ -7,7 +8,7 @@ namespace api.Interfaces
     {
         Task<List<ProcessDto>> GetAll();
         Task<Process?> GetById(int id);
-        Task<List<HierarchyProcessDto>> GetProcessesHierarchy();
+        Task<List<HierarchyProcessDto>> GetProcessesHierarchy(QueryObject query);
         Task<Process> Create(ProcessDto processDto);
         Task<ProcessDto?> Update(int id, UpdateProcessDto updateDto);
         Task<Process?> Delete(int id);

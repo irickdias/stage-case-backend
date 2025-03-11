@@ -1,4 +1,5 @@
 ﻿using api.Data;
+using api.Helpers;
 using api.Interfaces;
 using api.Models;
 using api.Models.Dtos.Process;
@@ -80,9 +81,43 @@ namespace api.Repository
             return await _context.Processes.FindAsync(id);
         }
 
-        public async Task<List<HierarchyProcessDto>> GetProcessesHierarchy()
+        public async Task<List<HierarchyProcessDto>> GetProcessesHierarchy(QueryObject query)
         {
-            var processes = await _context.Processes.Select(p => p.ToHierarchyProcessDto()).ToListAsync();
+            // var processes = await _context.Processes.Select(p => p.ToHierarchyProcessDto()).ToListAsync();
+            var processesQuery = _context.Processes
+                .Join(_context.Sectors,
+                  process => process.sectorId,
+                  sector => sector.id,
+                  (process, sector) => new { process, sector })
+                .Join(_context.Departments,
+                  ps => ps.sector.departmentId,
+                  department => department.id,
+                  (ps, department) => new {ps.process, sectorName = ps.sector.name, departmentName = department.name})
+                .AsQueryable();
+
+            if(!string.IsNullOrWhiteSpace(query.search))
+            {
+                processesQuery = processesQuery.Where(p => p.process.name.Contains(query.search));
+            }
+
+            if (query.department != null)
+            {
+                processesQuery = processesQuery.Where(p => p.process.sector != null && p.process.sector.departmentId == query.department);
+            }
+
+            if (query.sector != null)
+            {
+                processesQuery = processesQuery.Where(p => p.process.sectorId == query.sector);
+            }
+
+            var skipNumber = (query.pageNumber - 1) * query.pageSize;
+
+            var processes = await processesQuery
+                .Select(p => p.process.ToHierarchyProcessDto(p.departmentName, p.sectorName))
+                .Skip(skipNumber)
+                .Take(query.pageNumber)
+                .ToListAsync();
+
             var processMap = processes.ToDictionary(p => p.id, p => p);
 
             var hierarchy = new List<HierarchyProcessDto>();

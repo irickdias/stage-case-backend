@@ -15,6 +15,8 @@ namespace api.Models.Dtos.Process
         public string priority { get; set; } = string.Empty;
         public bool finished { get; set; } = false;
         public DateTime createdOn { get; set; } = DateTime.Now;
+        public string sectorName { get; set; } = string.Empty;
+        public string departmentName { get; set; } = string.Empty;
         public int? sectorId { get; set; }
         public int? parentProcessId { get; set; }
         public List<HierarchyProcessDto> children { get; set; } = new();

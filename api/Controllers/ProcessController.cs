@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using api.Data;
+using api.Helpers;
 using api.Interfaces;
 using api.Models.Dtos.Process;
 using api.Models.Mappers;
@@ -32,8 +33,8 @@ namespace api.Controllers
 
         [HttpGet]
         [Route("/get-hierarchy")]
-        public async Task<IActionResult> GetHierarchy() {
-            var hierarchy = await _repo.GetProcessesHierarchy();
+        public async Task<IActionResult> GetHierarchy([FromQuery] QueryObject query) {
+            var hierarchy = await _repo.GetProcessesHierarchy(query);
 
             return Ok(hierarchy);
         }

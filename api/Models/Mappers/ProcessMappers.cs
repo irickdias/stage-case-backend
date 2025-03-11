@@ -22,7 +22,7 @@ namespace api.Models.Mappers
             };
         }
 
-        public static HierarchyProcessDto ToHierarchyProcessDto(this Process processModel) {
+        public static HierarchyProcessDto ToHierarchyProcessDto(this Process processModel, string departmentName = "", string sectorName = "") {
             return new HierarchyProcessDto {
                 id = processModel.id,
                 name = processModel.name,
@@ -33,6 +33,8 @@ namespace api.Models.Mappers
                 finished = processModel.finished,
                 createdOn = processModel.createdOn,
                 sectorId = processModel.sectorId,
+                departmentName = departmentName,
+                sectorName = sectorName,
                 parentProcessId = processModel.parentProcessId
             };
         }
