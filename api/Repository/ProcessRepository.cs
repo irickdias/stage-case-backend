@@ -5,6 +5,7 @@ using api.Models;
 using api.Models.Dtos.Process;
 using api.Models.Mappers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace api.Repository
 {
@@ -97,7 +98,37 @@ namespace api.Repository
 
             await _context.SaveChangesAsync();
 
+            await FinishParentProcesses(processExists.parentProcessId);
+
             return processExists;
+        }
+
+        // 🔹 Função para propagar finalização para cima
+        private async Task FinishParentProcesses(int? parentId)
+        {
+            bool keep = true;
+            while (parentId.HasValue && keep)
+            {
+                var parent = await _context.Processes.FindAsync(parentId); // procura pelo processo pai
+                if (parent == null || parent.finished) // evitar erro, se nao encontrar para o loop
+                    keep = false;
+                else
+                {
+                    bool allChildrenFinished = await _context.Processes
+                        .Where(p => p.parentProcessId == parent.id)
+                        .AllAsync(p => p.finished); // verifica se todos os filhos do pai estão finalizados
+
+                    if (!allChildrenFinished) // se n estiverem, n precisa finalizar o pai, entao sai do loop
+                        keep = false;
+                    else
+                    {
+                        parent.finished = true;
+                        await _context.SaveChangesAsync();
+
+                        parentId = parent.parentProcessId; // Move para o próximo nível
+                    }
+                }
+            }
         }
 
         public async Task<List<ProcessDto>> GetAll()
@@ -112,7 +143,6 @@ namespace api.Repository
 
         public async Task<List<HierarchyProcessDto>> GetProcessesHierarchy(QueryObject query)
         {
-            // var processes = await _context.Processes.Select(p => p.ToHierarchyProcessDto()).ToListAsync();
             var processesQuery = _context.Processes
                 .Join(_context.Sectors,
                   process => process.sectorId,
@@ -139,12 +169,8 @@ namespace api.Repository
                 processesQuery = processesQuery.Where(p => p.process.sectorId == query.sector);
             }
 
-            //var skipNumber = (query.pageNumber - 1) * query.pageSize;
-
             var processes = await processesQuery
-                .Select(p => p.process.ToHierarchyProcessDto(p.departmentName, p.sectorName, null))
-                //.Skip(skipNumber)
-                //.Take(query.pageNumber)
+                .Select(p => p.process.ToHierarchyProcessDto(p.departmentName, p.sectorName, 0))
                 .ToListAsync();
 
             var processMap = processes.ToDictionary(p => p.id, p => p);
@@ -164,8 +190,23 @@ namespace api.Repository
 
             foreach(var process in processMap.Values)
             {
-                var count = process.children.Count();
-                process.finishedSubprocesses = count > 0 ? process.children.Count(children => children.finished) : null;
+                if (process.finished)
+                    process.progress = 100;
+                else
+                {
+                    var count = process.children.Count();
+                    if (count > 0)
+                    {
+                        var finishedSubs = process.children.Count(children => children.finished);
+                        if (finishedSubs == 0)
+                            process.progress = 0;
+                        else
+                            process.progress = Math.Round(100 / (decimal)(count / finishedSubs));
+                    }
+                    else
+                        process.progress = 0;
+                }
+                   
             }
 
             var skipNumber = (query.pageNumber - 1) * query.pageSize;

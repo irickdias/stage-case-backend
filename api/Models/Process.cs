@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace api.Models
@@ -36,7 +37,8 @@ namespace api.Models
 
         // auto relacionamento
         public int? parentProcessId { get; set; } // Null se for um processo principal
-        
+
+        [JsonIgnore]
         [ForeignKey("parentProcessId")]
         public Process? parentProcess { get; set; }
         

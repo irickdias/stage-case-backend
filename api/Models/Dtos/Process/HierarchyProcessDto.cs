@@ -17,7 +17,7 @@ namespace api.Models.Dtos.Process
         public DateTime createdOn { get; set; } = DateTime.Now;
         public string sectorName { get; set; } = string.Empty;
         public string departmentName { get; set; } = string.Empty;
-        public int? finishedSubprocesses { get; set; } = null;
+        public decimal? progress { get; set; } = null;
         public int? sectorId { get; set; }
         public int? parentProcessId { get; set; }
         public List<HierarchyProcessDto> children { get; set; } = new();
