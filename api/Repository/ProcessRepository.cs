@@ -110,12 +110,12 @@ namespace api.Repository
                 processesQuery = processesQuery.Where(p => p.process.sectorId == query.sector);
             }
 
-            var skipNumber = (query.pageNumber - 1) * query.pageSize;
+            //var skipNumber = (query.pageNumber - 1) * query.pageSize;
 
             var processes = await processesQuery
-                .Select(p => p.process.ToHierarchyProcessDto(p.departmentName, p.sectorName))
-                .Skip(skipNumber)
-                .Take(query.pageNumber)
+                .Select(p => p.process.ToHierarchyProcessDto(p.departmentName, p.sectorName, null))
+                //.Skip(skipNumber)
+                //.Take(query.pageNumber)
                 .ToListAsync();
 
             var processMap = processes.ToDictionary(p => p.id, p => p);
@@ -133,7 +133,15 @@ namespace api.Repository
                     hierarchy.Add(process);
             }
 
-            return hierarchy;
+            foreach(var process in processMap.Values)
+            {
+                var count = process.children.Count();
+                process.finishedSubprocesses = count > 0 ? process.children.Count(children => children.finished) : null;
+            }
+
+            var skipNumber = (query.pageNumber - 1) * query.pageSize;
+
+            return hierarchy.Skip(skipNumber).Take(query.pageSize).ToList();
         }
 
         public async Task<ProcessDto?> Update(int id, UpdateProcessDto updateDto)
