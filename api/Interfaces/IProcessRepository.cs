@@ -12,5 +12,6 @@ namespace api.Interfaces
         Task<Process> Create(ProcessDto processDto);
         Task<ProcessDto?> Update(int id, UpdateProcessDto updateDto);
         Task<Process?> Delete(int id);
+        Task<Process?> FinishProcess(int id);
     }
 }

@@ -71,6 +71,35 @@ namespace api.Repository
             return processModel;
         }
 
+        public async Task<Process?> FinishProcess(int id)
+        {
+            var processExists = await _context.Processes.FirstOrDefaultAsync(p => p.id == id);
+
+            if (processExists == null)
+                return null;
+
+            var sql = @"
+                WITH ProcessHierarchy AS (
+                    SELECT id FROM Processes WHERE id = {0}
+                    UNION ALL
+                    SELECT p.id FROM Processes p
+                    INNER JOIN ProcessHierarchy ph ON p.parentProcessId = ph.id
+                )
+                Select * FROM Processes WHERE id IN (SELECT id FROM ProcessHierarchy);
+            ";
+
+            var processes = await _context.Processes.FromSqlRaw(sql,id).ToListAsync();
+     
+            foreach (var process in processes)
+            {
+                process.finished = true;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return processExists;
+        }
+
         public async Task<List<ProcessDto>> GetAll()
         {
             return await _context.Processes.Select(p => p.ToProcessDto()).ToListAsync();

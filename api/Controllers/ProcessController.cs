@@ -81,5 +81,17 @@ namespace api.Controllers
 
             return NoContent();
         }
+
+        [HttpPut]
+        [Route("/finish-process")]
+        public async Task<IActionResult> FinishProcess([FromQuery] int id)
+        {
+            var finish = await _repo.FinishProcess(id);
+
+            if (finish == null)
+                return NotFound();
+
+            return Ok(finish);
+        }
     }
 }
