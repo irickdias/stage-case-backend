@@ -8,7 +8,7 @@ namespace api.Interfaces
     {
         Task<List<ProcessDto>> GetAll();
         Task<Process?> GetById(int id);
-        Task<List<HierarchyProcessDto>> GetProcessesHierarchy(QueryObject query);
+        Task<PaginatedList<HierarchyProcessDto>> GetProcessesHierarchy(QueryObject query);
         Task<Process> Create(ProcessDto processDto);
         Task<ProcessDto?> Update(int id, UpdateProcessDto updateDto);
         Task<Process?> Delete(int id);

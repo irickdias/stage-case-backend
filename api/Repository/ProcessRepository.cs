@@ -141,7 +141,7 @@ namespace api.Repository
             return await _context.Processes.FindAsync(id);
         }
 
-        public async Task<List<HierarchyProcessDto>> GetProcessesHierarchy(QueryObject query)
+        public async Task<PaginatedList<HierarchyProcessDto>> GetProcessesHierarchy(QueryObject query)
         {
             var processesQuery = _context.Processes
                 .Join(_context.Sectors,
@@ -209,9 +209,18 @@ namespace api.Repository
                    
             }
 
-            var skipNumber = (query.pageNumber - 1) * query.pageSize;
+            var totalCount = hierarchy.Count;
+            var totalPages = (int)Math.Ceiling(totalCount / (double)query.pageSize);
 
-            return hierarchy.Skip(skipNumber).Take(query.pageSize).ToList();
+            var skipNumber = (query.pageNumber - 1) * query.pageSize;
+            var pagedHierarchy = hierarchy.Skip(skipNumber).Take(query.pageSize).ToList();
+
+            return new PaginatedList<HierarchyProcessDto>
+            {
+                data = pagedHierarchy,
+                totalPages = totalPages,
+                totalRecords = totalCount
+            };
         }
 
         public async Task<ProcessDto?> Update(int id, UpdateProcessDto updateDto)
