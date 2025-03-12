@@ -36,7 +36,7 @@ namespace api.Models
 
 
         // auto relacionamento
-        public int? parentProcessId { get; set; } // Null se for um processo principal
+        public int? parentProcessId { get; set; }
 
         [JsonIgnore]
         [ForeignKey("parentProcessId")]

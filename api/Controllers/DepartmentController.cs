@@ -35,19 +35,6 @@ namespace api.Controllers
         [Route("/get-all-departments-sectors")]
         public async Task<IActionResult> GetAllDepartmentsSectors()
         {
-            // var departments = _service.Departments
-            // .Select(d => new
-            // {
-            //     d.id,
-            //     d.name,
-            //     sectors = d.sectors.Select(s => new
-            //     {
-            //         s.id,
-            //         s.name
-            //     }).ToList()
-            // })
-            // .ToList();
-
             var ds = await _repo.GetAllDepartmentsAndSectors();
 
             return Ok(ds);

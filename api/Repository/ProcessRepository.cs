@@ -34,27 +34,6 @@ namespace api.Repository
             if (processModel == null)
                 return null;
 
-            /*var sql = @"
-                WITH ProcessHierarchy AS (
-                    SELECT id FROM Processes WHERE id = {0}
-                    UNION ALL
-                    SELECT p.id FROM Processes p
-                    INNER JOIN ProcessHierarchy ph ON p.parentProcessId = ph.id
-                )
-                SELECT id FROM ProcessHierarchy;
-            ";
-
-            var processIds = await _context.Processes
-                .FromSqlRaw(sql, id)
-                .Select(p => p.id)
-                .ToListAsync();
-
-            await _context.Processes
-                .Where(p => processIds.Contains(p.id))
-                .ExecuteDeleteAsync();
-
-            await _context.SaveChangesAsync();*/
-
             var sql = @"
                 WITH ProcessHierarchy AS (
                     SELECT id FROM Processes WHERE id = {0}
@@ -103,7 +82,6 @@ namespace api.Repository
             return processExists;
         }
 
-        // 🔹 Função para propagar finalização para cima
         private async Task FinishParentProcesses(int? parentId)
         {
             bool keep = true;

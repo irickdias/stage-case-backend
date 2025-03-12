@@ -68,7 +68,6 @@ namespace api.Repository
 
         private async Task<bool> HasProcessesInDepartment(int departmentId)
         {
-            // 1️⃣ Obtém os IDs dos setores do departamento
             var sectorIds = await _context.Sectors
                 .Where(s => s.departmentId == departmentId)
                 .Select(s => s.id)
